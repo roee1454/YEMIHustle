@@ -11,6 +11,7 @@
 //! the original game); `--skin DIR` points at a different copy of the original's files.
 
 mod art;
+mod atmosphere;
 mod aura;
 mod build;
 mod customize;
@@ -386,6 +387,7 @@ fn main() {
         .insert_resource(fx::FxLibrary::new(Some(sources.game_dir()).filter(|d| d.join("project.godot").exists()), &data_dir))
         .insert_resource(sources)
         .init_resource::<fx::Shake>()
+        .init_resource::<atmosphere::Atmosphere>()
         .init_resource::<art::Art>()
         .insert_resource(FxPreview(fx_preview))
         .add_systems(OnEnter(AppState::Fight), fight::spawn_fight)
@@ -412,7 +414,8 @@ fn main() {
                 menu::play_sounds,
                 pixel::animate_rings,
                 fx::update_shake,
-                (fight::draw, fight::scene_particles, fight::draw_objects, fx::draw_effects, fight::hud).chain().run_if(in_state(AppState::Fight)),
+                atmosphere::update_atmosphere,
+                (fight::draw, fight::scene_particles, fight::draw_objects, fx::draw_effects, atmosphere::draw_atmosphere, fight::hud).chain().run_if(in_state(AppState::Fight)),
                 customize::preview,
                 aura::draw_particles,
                 screenshots,

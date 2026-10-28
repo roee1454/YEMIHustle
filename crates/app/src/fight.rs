@@ -547,6 +547,7 @@ pub fn fight_hotkeys(
     paths: Res<Paths>,
     pads: Res<crate::pad::Pads>,
     gamepads: Query<&bevy::input::gamepad::Gamepad>,
+    mut atmo: ResMut<crate::atmosphere::Atmosphere>,
 ) {
     let g = &mut *game;
     // a player's Pause button opens the pause menu; Training Reset resets in training
@@ -582,6 +583,10 @@ pub fn fight_hotkeys(
         g.over_frames += 1;
         menu.push(Page::PostGame);
         return;
+    }
+    if keys.just_pressed(KeyCode::F8) {
+        atmo.storm_weather = !atmo.storm_weather;
+        g.status = format!("Storm Weather: {}", if atmo.storm_weather { "ON (Torrential Rain)" } else { "OFF" });
     }
     let h = settings.hotkeys.clone();
     if h.pause_sim.just_pressed(&keys) {
@@ -674,6 +679,7 @@ pub fn draw(
     mut game: ResMut<Game>,
     settings: Res<Settings>,
     shake: Res<crate::fx::Shake>,
+    atmo: Res<crate::atmosphere::Atmosphere>,
     mut gizmos: Gizmos,
     mut bodies: Query<(&Body, &mut Sprite, &mut Transform, &mut Visibility), (Without<Nose>, Without<Art>, Without<ProjArt>, Without<OverlayArt>)>,
     mut noses: Query<(&Nose, &mut Sprite, &mut Transform, &mut Visibility), (Without<Body>, Without<Art>, Without<ProjArt>, Without<OverlayArt>)>,
@@ -685,15 +691,16 @@ pub fn draw(
     mut images: ResMut<Assets<Image>>,
 ) {
     let w = &game.world;
+    let zoom = ZOOM * (1.0 + atmo.zoom_kick);
     let stage = w.cfg.stage_half_width as f32;
-    let vis = HALF_W_PX / ZOOM;
+    let vis = HALF_W_PX / zoom;
     let mid = (w.f[0].pos.x.to_f32() + w.f[1].pos.x.to_f32()) / 2.0;
     let target = if stage > vis { mid.clamp(-stage + vis, stage - vis) } else { 0.0 };
     let cam = game.cam_x + (target - game.cam_x) * 0.2;
     game.cam_x = cam;
     let w = &game.world;
     let sh = shake.offset;
-    let to_screen = |x: f32, y: f32| Vec2::new((x - cam + sh.x) * ZOOM, GROUND_Y - (y + sh.y) * ZOOM);
+    let to_screen = |x: f32, y: f32| Vec2::new((x - cam + sh.x) * zoom, GROUND_Y - (y + sh.y) * zoom);
 
     // floor and walls
     gizmos.line_2d(to_screen(-stage, 0.0), to_screen(stage, 0.0), Color::srgb(0.45, 0.47, 0.5));
@@ -740,7 +747,7 @@ pub fn draw(
         let feet = w.f[i].pos;
         let x = feet.x.to_f32() + (offset.x + shift.0) * fac;
         tf.translation = to_screen(x, feet.y.to_f32() + offset.y + shift.1).extend(0.5);
-        tf.scale = Vec3::new(scale.0 * ZOOM, scale.1 * ZOOM, 1.0);
+        tf.scale = Vec3::new(scale.0 * zoom, scale.1 * zoom, 1.0);
         // Godot turns clockwise on screen; mirrored with the facing
         tf.rotation = Quat::from_rotation_z(-rot * fac);
         *vis = Visibility::Inherited;
@@ -765,7 +772,7 @@ pub fn draw(
         sprite.image = image;
         sprite.flip_x = p.facing < 0;
         tf.translation = to_screen(p.pos.x.to_f32() + offset.x * p.facing as f32, p.pos.y.to_f32() + offset.y).extend(0.6);
-        tf.scale = Vec3::splat(ZOOM);
+        tf.scale = Vec3::splat(zoom);
         *vis = Visibility::Inherited;
     }
     // overlays: sprites the original's move scripts show on top of the fighter
@@ -790,9 +797,9 @@ pub fn draw(
         let hang = (turn * Vec3::new(off.x * fac, -off.y, 0.0)).truncate();
         let feet = w.f[i].pos;
         let at = to_screen(feet.x.to_f32() + pos.x * fac, feet.y.to_f32() + pos.y);
-        tf.translation = (at + hang * ZOOM).extend(0.5 + z * 0.01 + if z < 0.0 { -0.2 } else { 0.2 });
+        tf.translation = (at + hang * zoom).extend(0.5 + z * 0.01 + if z < 0.0 { -0.2 } else { 0.2 });
         tf.rotation = turn;
-        tf.scale = Vec3::splat(ZOOM);
+        tf.scale = Vec3::splat(zoom);
         *vis = Visibility::Inherited;
     }
 
@@ -800,7 +807,7 @@ pub fn draw(
         let i = b.0;
         *vis = if drawn[i] { Visibility::Hidden } else { Visibility::Inherited };
         let (c, h) = w.hurtboxes(i)[0];
-        sprite.custom_size = Some(Vec2::new(h.x.to_f32() * 2.0, h.y.to_f32() * 2.0) * ZOOM);
+        sprite.custom_size = Some(Vec2::new(h.x.to_f32() * 2.0, h.y.to_f32() * 2.0) * zoom);
         sprite.color = act_color(i, &w.f[i].act);
         tf.translation = to_screen(c.x.to_f32(), c.y.to_f32()).extend(0.0);
     }
@@ -818,7 +825,7 @@ pub fn draw(
     if settings.flag("hitboxes") || (game.mode == Mode::Training && settings.train("show_hitboxes") > 0.5) {
         for i in 0..2 {
             for (c, h) in w.hurtboxes(i) {
-                gizmos.rect_2d(to_screen(c.x.to_f32(), c.y.to_f32()), Vec2::new(h.x.to_f32(), h.y.to_f32()) * 2.0 * ZOOM, Color::srgb(0.3, 0.95, 0.4));
+                gizmos.rect_2d(to_screen(c.x.to_f32(), c.y.to_f32()), Vec2::new(h.x.to_f32(), h.y.to_f32()) * 2.0 * zoom, Color::srgb(0.3, 0.95, 0.4));
             }
             for (c, h, hb, _) in w.hitboxes(i) {
                 let color = if hb.effects.throw {
@@ -828,7 +835,7 @@ pub fn draw(
                 } else {
                     Color::srgb(1.0, 0.2, 0.2)
                 };
-                gizmos.rect_2d(to_screen(c.x.to_f32(), c.y.to_f32()), Vec2::new(h.x.to_f32(), h.y.to_f32()) * 2.0 * ZOOM, color);
+                gizmos.rect_2d(to_screen(c.x.to_f32(), c.y.to_f32()), Vec2::new(h.x.to_f32(), h.y.to_f32()) * 2.0 * zoom, color);
             }
         }
     }
@@ -996,6 +1003,7 @@ pub fn fight_fx(
     mut track: Local<FxTrack>,
     pads: Res<crate::pad::Pads>,
     mut rumble: MessageWriter<bevy::input::gamepad::GamepadRumbleRequest>,
+    mut atmo: ResMut<crate::atmosphere::Atmosphere>,
 ) {
     use crate::fx::{play, spawn_effect, MoveFx};
     if game.intro_sound && lib.available() {
@@ -1147,6 +1155,30 @@ pub fn fight_fx(
                 }
                 let frames = if hfx.screenshake_frames < 0 { w.f[*victim].hitlag as f32 } else { hfx.screenshake_frames as f32 };
                 shake.bump(hfx.screenshake as f32, frames, Vec2::new(hfx.bump_dir.0, hfx.bump_dir.1));
+
+                // Visual atmosphere punch (zoom kick, impact frames, speedlines burst)
+                // In reference (yomi_recovered):
+                // - Hits DO NOT flash the entire screen white.
+                // - Normal hits DO NOT kick camera zoom (combos stay visually readable).
+                // - Speedlines DO NOT blast on every hit (only when launched fast through air).
+                // Normalized weights:
+                if w.f[*victim].hp <= 0 {
+                    // Match-ending lethal blow
+                    atmo.trigger_impact(2, Color::WHITE);
+                    atmo.trigger_zoom_kick(0.20);
+                } else if *damage >= 110 {
+                    // Heavy strike micro-punch
+                    atmo.trigger_zoom_kick(0.05);
+                }
+
+                // Speedline burst only on high-velocity launch knockback
+                let launch_speed = Vec2::new(d.x, d.y).length();
+                let is_launch = matches!(w.f[*victim].act, sim::Act::Hurt { launched: true, .. }) || launch_speed > 8.0;
+                if is_launch && *damage >= 100 {
+                    let launch_dir = Vec2::new(d.x, -d.y);
+                    let intensity = (*damage as f32 / 240.0).clamp(0.2, 0.55);
+                    atmo.burst_lines(launch_dir, (launch_speed / 7.0).clamp(1.0, 2.2), intensity);
+                }
             }
             sim::Event::Block { attacker, pos, .. } => {
                 // BaseChar: a blocked hit shows the flawed-parry flash with two block sounds
@@ -1172,7 +1204,10 @@ pub fn fight_fx(
                     }
                 }
             }
-            sim::Event::Ko { .. } => {}
+            sim::Event::Ko { .. } => {
+                atmo.trigger_impact(2, Color::WHITE);
+                atmo.trigger_zoom_kick(0.22);
+            }
             sim::Event::ObjectHit { attacker, mv, hitbox, pos, dir, damage } => {
                 // a struck summon or domain: the hit's spark and sound, without the victim's rumble
                 let hfx = mv.and_then(|m| move_fx(&lib, *attacker, &w.chars[*attacker].mv(m).id)).and_then(|m| m.hitboxes.get(hitbox).cloned()).unwrap_or_else(default_hitbox_fx);
@@ -1198,6 +1233,8 @@ pub fn fight_fx(
                 let p = v2(*pos) + Vec2::new(0.0, -16.0);
                 spawn(&mut commands, &mut lib, "fx/InstantCancelEffect.tscn", p, Vec2::new(w.f[*who].facing as f32, 0.0));
                 shake.bump(2.0, 4.0, Vec2::ZERO);
+                atmo.trigger_super_dim(0.30);
+                atmo.trigger_zoom_kick(0.06);
             }
         }
     }
@@ -1314,6 +1351,7 @@ pub fn draw_objects(
     game: Res<Game>,
     settings: Res<Settings>,
     shake: Res<crate::fx::Shake>,
+    atmo: Res<crate::atmosphere::Atmosphere>,
     scale: Res<UiScale>,
     mut pool: Query<(&mut Sprite, &mut Transform, &mut Visibility), With<NodeArt>>,
     mut library: ResMut<crate::fx::FxLibrary>,
@@ -1324,7 +1362,8 @@ pub fn draw_objects(
     let dirs = library.dirs();
     let cam = game.cam_x;
     let sh = shake.offset;
-    let to_screen = |x: f32, y: f32| Vec2::new((x - cam + sh.x) * ZOOM, GROUND_Y - (y + sh.y) * ZOOM);
+    let zoom = ZOOM * (1.0 + atmo.zoom_kick);
+    let to_screen = |x: f32, y: f32| Vec2::new((x - cam + sh.x) * zoom, GROUND_Y - (y + sh.y) * zoom);
     // (image, world position, size scale, flip, color, z, rotation)
     let mut draws: Vec<(Handle<Image>, Vec2, Vec2, bool, Color, f32, f32)> = Vec::new();
     let mut frame_of = |v: &sim::NodeView, library: &mut crate::fx::FxLibrary, images: &mut Assets<Image>| -> Option<Handle<Image>> {
@@ -1349,7 +1388,7 @@ pub fn draw_objects(
                 let x = p.pos.x.to_f32() + (v.pos.0 + v.offset.0 * v.scale.0) * sx;
                 let y = p.pos.y.to_f32() + v.pos.1 + v.offset.1 * v.scale.1;
                 let c = v.modulate;
-                draws.push((img, to_screen(x, y), Vec2::new(v.scale.0, v.scale.1) * ZOOM, mirror ^ v.flip_h, Color::srgba(c[0], c[1], c[2], c[3]), 0.5 + v.z as f32 * 0.01 + 0.005, -v.rotation * sx));
+                draws.push((img, to_screen(x, y), Vec2::new(v.scale.0, v.scale.1) * zoom, mirror ^ v.flip_h, Color::srgba(c[0], c[1], c[2], c[3]), 0.5 + v.z as f32 * 0.01 + 0.005, -v.rotation * sx));
             }
         }
         // nodes of the fighters' scenes their scripts show (marks, slashes...)
@@ -1363,7 +1402,7 @@ pub fn draw_objects(
                 let x = feet.x.to_f32() + (v.pos.0 + v.offset.0 * v.scale.0) * sx;
                 let y = feet.y.to_f32() + v.pos.1 + v.offset.1 * v.scale.1;
                 let c = v.modulate;
-                draws.push((img, to_screen(x, y), Vec2::new(v.scale.0, v.scale.1) * ZOOM, mirror ^ v.flip_h, Color::srgba(c[0], c[1], c[2], c[3]), 0.5 + v.z as f32 * 0.01 + 0.005, -v.rotation * sx));
+                draws.push((img, to_screen(x, y), Vec2::new(v.scale.0, v.scale.1) * zoom, mirror ^ v.flip_h, Color::srgba(c[0], c[1], c[2], c[3]), 0.5 + v.z as f32 * 0.01 + 0.005, -v.rotation * sx));
             }
         }
         // the UI layer: canvas pixels (640x360) over the whole view

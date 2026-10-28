@@ -313,6 +313,7 @@ pub const OPTIONS: &[Field] = &[
     check("projectile_owners", "show projectile owners", true),
     check("playback_hotkeys_window", "playback hotkeys require window", true),
     check("speed_lines", "show speed lines", true),
+    check("storm_weather", "enable storm weather (F8)", false),
     check("low_timer_sound", "enable low timer sound", true),
     check("freeze_frames", "enable hit freeze frames", true),
     check("playback_controls", "show playback controls", false),

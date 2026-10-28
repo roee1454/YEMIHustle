@@ -1,0 +1,15 @@
+[package]
+name = "sim"
+version = "0.1.0"
+edition = "2021"
+description = "Deterministic fixed-point fighting-game simulation (no engine dependencies)"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+charfmt = { path = "../charfmt" }
+gdscript = { path = "../gdscript" }
+serde = { workspace = true }
+ron = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

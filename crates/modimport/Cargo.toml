@@ -1,0 +1,22 @@
+[package]
+name = "modimport"
+version = "0.1.0"
+edition = "2021"
+description = "Finds Steam Workshop mods for the original game and reads what is in them"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+convert = { path = "../convert" }
+sim = { path = "../sim" }
+flate2 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+regex = { workspace = true }
+
+[[bin]]
+name = "yemi-modscan"
+path = "src/main.rs"
+
+[[bin]]
+name = "yemi-modimport"
+path = "src/bin_import.rs"

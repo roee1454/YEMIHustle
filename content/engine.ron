@@ -1,0 +1,43 @@
+// Engine tuning for the first playable test. Our own values (not taken from the original game).
+// Units: world units per tick (60 ticks per second); a fighter is about 32 units tall.
+// Press F5 in the game to reload this file.
+EngineConfig(
+    stage_half_width: 600,
+    start_distance: 90,
+
+    walk_speed: 4.0,
+    back_walk_speed: 3.0,
+
+    jump_squat: 3,
+    jump_speed: 11.0,
+    jump_forward_speed: 4.0,
+    double_jump_speed: 9.0,
+    landing_lag: 3,
+
+    dash_frames: 14,
+    dash_speed: 12.0,
+    back_dash_speed: 10.0,
+    dash_cancel_from: 5,
+    air_dashes: 2,
+    air_dash_frames: 12,
+    air_dash_speed: 9.0,
+
+    crouch_hurtbox: Rect(x: 0, y: -10, half_w: 14, half_h: 10),
+
+    input_buffer: 8,
+
+    chip_divisor: 3,
+    block_pushback: 4.0,
+
+    hurt_gravity: 0.35,
+    hurt_fall_speed: 12.0,
+    hurt_air_friction: 0.015,
+    hurt_ground_friction: 0.08,
+    knockdown_frames: 30,
+    getup_frames: 18,
+
+    stale_steps: 15,
+    min_stale: 0.2,
+
+    air_block: true,
+)

@@ -1,0 +1,12 @@
+[package]
+name = "gdscript"
+version = "0.1.0"
+edition = "2021"
+description = "A deterministic, sandboxed interpreter for the GDScript subset the game and its mods use"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+
+[[bin]]
+name = "gdcoverage"
+path = "src/bin/gdcoverage.rs"

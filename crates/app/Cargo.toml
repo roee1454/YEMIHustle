@@ -1,0 +1,21 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+description = "Bevy shell for the real-time prototype: input, debug rendering, HUD"
+license = "MIT OR Apache-2.0"
+
+[[bin]]
+name = "prototype"
+path = "src/main.rs"
+
+[dependencies]
+sim = { path = "../sim" }
+gdscript = { path = "../gdscript" }
+charfmt = { path = "../charfmt" }
+convert = { path = "../convert" }
+modimport = { path = "../modimport" }
+bevy = { version = "0.19", features = ["webp"] }
+serde = { workspace = true }
+ron = { workspace = true }
+rodio = { version = "0.22", default-features = false }

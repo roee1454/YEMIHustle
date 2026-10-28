@@ -1,0 +1,27 @@
+// Control scheme for the converted ninja (PRIVATE: names moves from the original game).
+// Binds are tried top to bottom; inside a bind the first usable move wins (modes, stance,
+// availability). Directions are relative to facing. Press F5 in the game to reload.
+//
+// Mode route to try: Heavy (nun_chuk_light, switches to NunChuk mode) then, on hit or block,
+// Heavy again (nun_chuk_heavy) or Forward+Special (whip_wave). Both only exist in NunChuk mode.
+ControlScheme(
+    character: "ninja",
+    binds: [
+        // ground
+        Bind(button: Light, dir: Down, stance: Ground, moves: ["grounded_sweep"]),
+        Bind(button: Light, dir: Forward, stance: Ground, moves: ["grounded_kick"]),
+        Bind(button: Light, stance: Ground, moves: ["grounded_punch"]),
+        Bind(button: Heavy, dir: Forward, stance: Ground, moves: ["slide_kick2"]),
+        Bind(button: Heavy, stance: Ground, moves: ["nun_chuk_heavy", "nun_chuk_light"]),
+        Bind(button: Special, dir: Forward, stance: Ground, moves: ["whip_wave"]),
+        Bind(button: Special, dir: Down, stance: Ground, moves: ["stomp"]),
+        Bind(button: Special, stance: Ground, moves: ["nun_chuk_light_high"]),
+        Bind(button: Grab, stance: Ground, moves: ["grab"]),
+        // air
+        Bind(button: Light, dir: Up, stance: Air, moves: ["air_upward_punch"]),
+        Bind(button: Light, dir: Down, stance: Air, moves: ["dive_kick"]),
+        Bind(button: Light, stance: Air, moves: ["air_attack"]),
+        Bind(button: Heavy, stance: Air, moves: ["nun_chuk_spin"]),
+        Bind(button: Special, stance: Air, moves: ["jump_kick"]),
+    ],
+)

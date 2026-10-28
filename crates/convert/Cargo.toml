@@ -1,0 +1,18 @@
+[package]
+name = "convert"
+version = "0.1.0"
+edition = "2021"
+description = "Converts the original game's characters (from its scenes and scripts) into the project's RON format"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "convert"
+
+[[bin]]
+name = "yemi-convert"
+path = "src/main.rs"
+
+[dependencies]
+serde_json = { workspace = true }
+regex = { workspace = true }
+rayon = { workspace = true }
